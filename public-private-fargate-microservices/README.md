@@ -100,7 +100,7 @@ rm env-template.tar.gz
 aws proton \
   --region us-east-2 \
   create-environment-template-version \
-  --name "aws-proton-fargate-microservices" \
+  --template-name "aws-proton-fargate-microservices" \
   --description "Proton Example Dev Environment Version 1" \
   --source s3="{bucket=proton-cli-templates-${account_id},key=env-template.tar.gz}"
 ```
@@ -154,7 +154,7 @@ rm svc-private-template.tar.gz
 aws proton \
   --region us-east-2 \
   create-service-template-version \
-  --name "lb-public-fargate-svc" \
+  --template-name "lb-public-fargate-svc" \
   --description "Version 1" \
   --source s3="{bucket=proton-cli-templates-${account_id},key=svc-private-template.tar.gz}" \
   --compatible-environment-templates '[{"templateName":"aws-proton-fargate-microservices","majorVersion":"1"}]'
@@ -176,7 +176,7 @@ You can now publish the Public service template version, making it available for
 aws proton \
   --region us-east-2 \
   update-service-template-version \
-  --name "lb-public-fargate-svc" \
+  --template-name "lb-public-fargate-svc" \
   --major-version "1" \
   --minor-version "0" \
   --status "PUBLISHED"
@@ -205,7 +205,7 @@ rm svc-private-template.tar.gz
 aws proton \
   --region us-east-2 \
   create-service-template-version \
-  --name "private-fargate-svc" \
+  --template-name "private-fargate-svc" \
   --description "Version 1" \
   --source s3="{bucket=proton-cli-templates-${account_id},key=svc-private-template.tar.gz}" \
   --compatible-environment-templates '[{"templateName":"aws-proton-fargate-microservices","majorVersion":"1"}]'
@@ -216,8 +216,8 @@ Wait for the service template version to be successfully registered. Use this co
 ```
 aws proton \
   --region us-east-2 \
-  get-service-template \
-  --name "private-fargate-svc" \
+  get-service-template-version \
+  --template-name "private-fargate-svc" \
   --major-version "1" \
   --minor-version "0"
 ```

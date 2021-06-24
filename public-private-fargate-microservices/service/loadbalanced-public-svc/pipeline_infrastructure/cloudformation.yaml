@@ -40,7 +40,10 @@ Resources:
                         "wget https://github.com/mikefarah/yq/releases/download/3.4.0/yq_linux_amd64",
                         "sha256sum -c yq_linux_amd64.sha",
                         "mv yq_linux_amd64 /usr/bin/yq",
-                        "chmod +x /usr/bin/yq"
+                        "chmod +x /usr/bin/yq",
+                        'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                        "unzip awscliv2.zip",
+                        "./aws/install"
                       ]
                     },
                     "pre_build": {
@@ -65,7 +68,7 @@ Resources:
                     },
                     "post_build": {
                       "commands": [
-                        "aws proton --endpoint-url https://proton.$AWS_DEFAULT_REGION.amazonaws.com --region $AWS_DEFAULT_REGION get-service --name $service_name | jq -r .service.spec > service.yaml",
+                        "/usr/local/bin/aws proton --endpoint-url https://proton.$AWS_DEFAULT_REGION.amazonaws.com --region $AWS_DEFAULT_REGION get-service --name $service_name | jq -r .service.spec > service.yaml",
                         "yq w service.yaml 'instances[*].spec.image' \"$IMAGE_ID\" > rendered_service.yaml"
                       ]
                     }
@@ -108,10 +111,21 @@ Resources:
           {
             "version": "0.2",
             "phases": {
+          "install": {
+                                "runtime-versions": {
+                                  "docker": 18
+                                },
+                                "commands": [
+                                  'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                                  "unzip awscliv2.zip",
+                                  "./aws/install"
+                                ]
+                              },
               "build": {
                 "commands": [
-                  "aws proton --endpoint-url https://proton.$AWS_DEFAULT_REGION.amazonaws.com --region $AWS_DEFAULT_REGION update-service-instance --deployment-type CURRENT_VERSION --name $service_instance_name --service-name $service_name --spec file://rendered_service.yaml",
-                  "aws proton --endpoint-url https://proton.$AWS_DEFAULT_REGION.amazonaws.com --region $AWS_DEFAULT_REGION wait service-instance-update-complete --name $service_instance_name --service-name $service_name"
+                  "/usr/local/bin/aws proton --endpoint-url https://proton.$AWS_DEFAULT_REGION.amazonaws.com --region $AWS_DEFAULT_REGION update-service-instance --deployment-type CURRENT_VERSION --name $service_instance_name --service-name $service_name --spec file://rendered_service.yaml",
+                  'while [ "$(/usr/local/bin/aws proton --endpoint-url https://proton.$AWS_DEFAULT_REGION.amazonaws.com --region $AWS_DEFAULT_REGION get-service-instance --name $service_instance_name --service-name $service_name | jq -r .serviceInstance.deploymentStatus)" "==" "IN_PROGRESS" ]; do sleep 5; done;',
+                  'if [ "$(/usr/local/bin/aws proton --endpoint-url https://proton.$AWS_DEFAULT_REGION.amazonaws.com --region $AWS_DEFAULT_REGION get-service-instance --name $service_instance_name --service-name $service_name | jq -r .serviceInstance.deploymentStatus)" "!=" "SUCCEEDED" ]; then exit -1; fi;'
                 ]
               }
             }
